@@ -51,4 +51,19 @@ describe("Authenticate User",()=>{
         });
       }).rejects.toBeInstanceOf(IncorrectEmailOrPasswordError);
     });
+
+    it("should be not be able to authenticate an invalid email", () => {
+      expect(async () =>{
+        const user: ICreateUserDTO = {
+          email: "test@test.com",
+          name: "test",
+          password: "1324",
+        }
+        await createUserUserCase.execute(user);
+        await authenticateUserUseCase.execute({
+          email: "error@error.com",
+        password: user.password,
+        });
+      }).rejects.toBeInstanceOf(IncorrectEmailOrPasswordError);
+    });
 })
