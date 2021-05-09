@@ -55,7 +55,6 @@ describe("Get Balance", () =>{
     }).rejects.toBeInstanceOf(CreateStatementError.UserNotFound);
   });
 
-
   it("should not be able to create a statement of withdraw if have insufficient funds", async () => {
     const user: ICreateUserDTO = {
       email: "test@test.com",

@@ -4,6 +4,7 @@ import { ICreateUserDTO } from "../../../users/useCases/createUser/ICreateUserDT
 import { Statement } from "../../entities/Statement";
 import { InMemoryStatementsRepository } from "../../repositories/in-memory/InMemoryStatementsRepository";
 import { CreateStatementUseCase } from "../createStatement/CreateStatementUseCase";
+import { CreateStatementTransfUseCase } from "../createStatementTransf/CreateStatementTransfUseCase";
 import { GetStatementOperationError } from "./GetStatementOperationError";
 import { GetStatementOperationUseCase } from "./GetStatementOperationUseCase";
 
@@ -12,6 +13,7 @@ let createUserUseCase: CreateUserUseCase;
 let inMemoryStatementsRepository: InMemoryStatementsRepository;
 let createStatementUseCase: CreateStatementUseCase;
 let getStatementOperationUseCase: GetStatementOperationUseCase;
+let createStatementTransUseCase: CreateStatementTransfUseCase;
 
 enum OperationType {
   DEPOSIT = 'deposit',
@@ -25,6 +27,7 @@ describe("Get Statement Operations", () =>{
     inMemoryStatementsRepository = new InMemoryStatementsRepository()
     createStatementUseCase = new CreateStatementUseCase(inMemoryUserRepository,inMemoryStatementsRepository)
     getStatementOperationUseCase = new GetStatementOperationUseCase(inMemoryUserRepository,inMemoryStatementsRepository);
+    createStatementTransUseCase = new CreateStatementTransfUseCase(inMemoryUserRepository, inMemoryStatementsRepository);
   });
   it("Should be able to get a statement operation", async() =>{
     const user: ICreateUserDTO = {
@@ -96,6 +99,45 @@ describe("Get Statement Operations", () =>{
         statement_id: "error",
       });
     }).rejects.toBeInstanceOf(GetStatementOperationError.StatementNotFound);
+
+  });
+  it("Should be able to get a statement transf operation", async() =>{
+
+    const sender: ICreateUserDTO = {
+      email: "ki@mekgogide.id",
+      name: "Barry Perkins",
+      password: "1234",
+    };
+    const receiver: ICreateUserDTO = {
+      email: "zipza@wasvurih.ug",
+      name: "Ethan Wright",
+      password: "1234",
+    };
+
+    const senderCreated = await createUserUseCase.execute(sender);
+
+    const receiverCreated = await createUserUseCase.execute(receiver);
+
+    const statement = await createStatementUseCase.execute({
+      user_id: senderCreated.id,
+      type: "deposit" as OperationType,
+      amount: 10000,
+      description: "deposit"
+    });
+
+    const transf = await createStatementTransUseCase.execute({
+      sender_id: senderCreated.id,
+      id: receiverCreated.id,
+      amount: 1000,
+      description: "transfer"
+    });
+
+    const ret = await getStatementOperationUseCase.execute({
+      user_id: receiverCreated.id,
+      statement_id: transf.id,
+    });
+
+    expect(ret).toEqual(expect.objectContaining({sender_id: senderCreated.id}));
 
   });
 })
